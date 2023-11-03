@@ -147,10 +147,10 @@ pub(super) fn metrics_attributes_from_request(
         HTTP_REQUEST_METHOD,
         http_method_str(req.method()),
     ));
-    attributes.push(KeyValue::new(
-        NETWORK_PROTOCOL_VERSION,
-        protocol_version(req.version()),
-    ));
+    // attributes.push(KeyValue::new(
+    //     NETWORK_PROTOCOL_VERSION,
+    //     protocol_version(req.version()),
+    // ));
 
     let mut host_parts = conn_info.host().split_terminator(':');
     if let Some(host) = host_parts.next() {
@@ -159,7 +159,7 @@ pub(super) fn metrics_attributes_from_request(
     if let Some(port) = host_parts.next().and_then(|port| port.parse().ok()) {
         attributes.push(SERVER_PORT.i64(port))
     }
-    attributes.push(KeyValue::new(URL_SCHEME, url_scheme(conn_info.scheme())));
+    //attributes.push(KeyValue::new(URL_SCHEME, url_scheme(conn_info.scheme())));
 
     attributes
 }

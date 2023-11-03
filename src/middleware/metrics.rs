@@ -75,6 +75,7 @@ impl Metrics {
 pub struct RequestMetricsBuilder {
     route_formatter: Option<Arc<dyn RouteFormatter + Send + Sync + 'static>>,
     meter: Option<Meter>,
+    use_paths_in_route_label: bool,
 }
 
 impl RequestMetricsBuilder {
@@ -97,6 +98,11 @@ impl RequestMetricsBuilder {
         self.meter = Some(get_versioned_meter(meter_provider));
         self
     }
+    
+    pub fn use_paths_in_route_label( mut self, use_paths_in_route_label: bool ) -> Self {
+        self.use_paths_in_route_label = use_paths_in_route_label;
+        self
+    }
 
     /// Build the `RequestMetrics` middleware
     pub fn build(self) -> RequestMetrics {
@@ -107,6 +113,7 @@ impl RequestMetricsBuilder {
         RequestMetrics {
             route_formatter: self.route_formatter,
             metrics: Arc::new(Metrics::new(meter)),
+            use_paths_in_route_label: self.use_paths_in_route_label,
         }
     }
 }
@@ -163,6 +170,7 @@ fn get_versioned_meter(meter_provider: impl MeterProvider) -> Meter {
 pub struct RequestMetrics {
     route_formatter: Option<Arc<dyn RouteFormatter + Send + Sync + 'static>>,
     metrics: Arc<Metrics>,
+    use_paths_in_route_label: bool,
 }
 
 impl RequestMetrics {
@@ -199,6 +207,7 @@ where
             service,
             metrics: self.metrics.clone(),
             route_formatter: self.route_formatter.clone(),
+            use_paths_in_route_label: self.use_paths_in_route_label,
         };
 
         future::ok(service)
@@ -211,6 +220,7 @@ pub struct RequestMetricsMiddleware<S> {
     service: S,
     metrics: Arc<Metrics>,
     route_formatter: Option<Arc<dyn RouteFormatter + Send + Sync + 'static>>,
+    use_paths_in_route_label: bool,
 }
 
 impl<S, B> dev::Service<dev::ServiceRequest> for RequestMetricsMiddleware<S>
@@ -232,10 +242,18 @@ where
     fn call(&self, req: dev::ServiceRequest) -> Self::Future {
         let timer = SystemTime::now();
 
-        let mut http_target = req
-            .match_pattern()
+        
+            
+        
+        let mut http_target =
+            if self.use_paths_in_route_label{
+                req.match_pattern()
+            }else{
+                req.path()
+            }
             .map(Cow::Owned)
             .unwrap_or(Cow::Borrowed("default"));
+            
 
         if let Some(formatter) = &self.route_formatter {
             http_target = Cow::Owned(formatter.format(&http_target));
