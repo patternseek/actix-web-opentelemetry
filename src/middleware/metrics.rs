@@ -249,7 +249,7 @@ where
             if self.use_paths_in_route_label{
                 req.match_pattern()
             }else{
-                req.path()
+                Some( req.path().to_string() )
             }
             .map(Cow::Owned)
             .unwrap_or(Cow::Borrowed("default"));
