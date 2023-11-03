@@ -247,9 +247,9 @@ where
         
         let mut http_target =
             if self.use_paths_in_route_label{
-                req.match_pattern()
-            }else{
                 Some( req.path().to_string() )
+            }else{
+                req.match_pattern()
             }
             .map(Cow::Owned)
             .unwrap_or(Cow::Borrowed("default"));
